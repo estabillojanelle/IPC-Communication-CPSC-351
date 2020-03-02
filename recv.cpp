@@ -30,8 +30,14 @@ const char recvFileName[] = "recvfile";
 
 void init(int& shmid, int& msqid, void*& sharedMemPtr)
 {
-	key_t key;
-	key = ftok("keyfile.txt", 'a');
+	key_t keyFile()
+	{
+		ofstream key;
+		key.open("keyfile.txt"); //opening our file
+		key.close(); //closing the file
+		key_t key = ftok("keyfile.txt", 'a'); //generating the key
+		return key;
+	}
 
 	/* TODO: 1. Create a file called keyfile.txt containing string "Hello world" (you may do
  		    so manually or from the code).
