@@ -1,5 +1,7 @@
 # IPC-Communication-CPSC-351
 
+AUTHORS
+--------------------------------------
 Janelle Estabillo
 estabillojanelle@csu.fullerton.edu
 CPSC 351-02
