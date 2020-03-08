@@ -35,6 +35,14 @@ void init(int& shmid, int& msqid, void*& sharedMemPtr)
 		    may have the same key.
 	 */
 	
+	key_t keyFile()
+	{
+		ofstream key;
+		key.open("keyfile.txt"); //opening our file
+		key.close(); //closing the file
+		key_t key = ftok("keyfile.txt", 'a'); //generating the key
+		return key;
+	}
 
 	
 	/* TODO: Get the id of the shared memory segment. The size of the segment must be SHARED_MEMORY_CHUNK_SIZE */
