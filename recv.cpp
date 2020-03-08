@@ -85,6 +85,7 @@ void init(int& shmid, int& msqid, void*& sharedMemPtr)
 	}
 
 	cout<< "The message queue id : "<<msqid<<endl;
+	sharedMemPtr = shmat(shmid,NULL,0);
 
 }
 
@@ -94,8 +95,9 @@ void init(int& shmid, int& msqid, void*& sharedMemPtr)
  */
 void mainLoop()
 {
+	cout<< "in main loop"<<endl;
 	/* The size of the mesage */
-	int msgSize = 0;
+	int msgSize = 1;
 
 	/* A buffer to store message we will send to the receiver. */
 	message sndMsg;
@@ -130,17 +132,25 @@ void mainLoop()
  	 */
 
 
-
 	while(msgSize != 0)
 	{
+     cout<< "in while loop"<<endl;
+		/* If the sender is not telling us that we are done, then get to work */
 		//receive a message type of message is SENDER_DATA_TYPE
 		if (msgrcv(msqid, &rcvMsg, sizeof(struct message) - sizeof(long), SENDER_DATA_TYPE, 0) == -1) {
 		 perror("msgrcv");
 		 exit(-1);
-	 }
-		/* If the sender is not telling us that we are done, then get to work */
+		}
+
+		cout<< "msgsize = "<< rcvMsg.size<<endl;
+		cout<< "msgtype= "<<rcvMsg.mtype<<endl;
+		msgSize = rcvMsg.size;
 		if(msgSize != 0)
 		{
+			cout<< "writing to the file.."<<endl;
+
+      //checking the shared memory pointer
+				//	cout<< "segment value.. checking shared memory..pointer"<<intPtr->value<<endl;
 			/* Save the shared memory to file */
 			if(fwrite(sharedMemPtr, sizeof(char), msgSize, fp) < 0)
 			{
@@ -151,17 +161,21 @@ void mainLoop()
  			 * I.e. send a message of type RECV_DONE_TYPE (the value of size field
  			 * does not matter in this case).
  			 */
+			 cout<< "now sending the message to sender.. for next data"<<endl;
 			 //setting the type of sending Message
 			 sndMsg.mtype = RECV_DONE_TYPE;
 			 //now sending the message that we recieved first one and we are ready for the next one
+
 			 if (msgsnd(msqid, &sndMsg, sizeof(struct message) - sizeof(long), 0) == -1){
 				perror("msgsnd");
 			}
+			cout<< "message sent to sender"<<endl;
 		}
 		/* We are done */
 		else
 		{
 			/* Close the file */
+			cout<< "closing the recvfile"<<endl;
 			fclose(fp);
 		}
 	}
@@ -179,11 +193,20 @@ void mainLoop()
 void cleanUp(const int& shmid, const int& msqid, void* sharedMemPtr)
 {
 	/* TODO: Detach from shared memory */
-
+	if (shmdt(sharedMemPtr) == -1) {
+ 	 perror("shmdt"); // If Shared memory failed to detach
+ 	 exit(-1);
+  }
 	/* TODO: Deallocate the shared memory chunk */
-
+	if (shmctl(shmid, IPC_RMID, NULL) == -1) {
+		perror("shmctl"); //If Shared memory isn't destroyed
+		exit(-1); // Exits Program
+	}
 	/* TODO: Deallocate the message queue */
-
+	if (msgctl(msqid, IPC_RMID, NULL) == -1) {
+		perror("msgctl"); //If Message Queue isn't destroyed
+		exit(-1); // Exits program
+	}
 }
 
 /**
@@ -194,6 +217,7 @@ void cleanUp(const int& shmid, const int& msqid, void* sharedMemPtr)
 void ctrlCSignal(int signal)
 {
 	/* Free system V resources */
+	cout<< "deallocating segment and message queue .."<<endl;
 	cleanUp(shmid, msqid, sharedMemPtr);
 }
 
@@ -213,6 +237,7 @@ int main(int argc, char** argv)
 	mainLoop();
 
 	/** TODO: Detach from shared memory segment, and deallocate shared memory and message queue (i.e. call cleanup) **/
+	ctrlCSignal(0);
 
 	return 0;
 }
