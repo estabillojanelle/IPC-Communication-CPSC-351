@@ -70,7 +70,7 @@ void cleanUp(const int& shmid, const int& msqid, void* sharedMemPtr)
 	}
 
 	// Destroying Shared Memory
-	if (shmctl(shmid, IPC_RMID, NULL) == -1 ) {
+	if (shmctl(shmid, IPC_RMID, NULL) == -1) {
 		perror("shmctl"); //If Shared memory isn't destroyed
 		exit(-1); // Exits Program
 	}
@@ -123,7 +123,7 @@ void send(const char* fileName)
  		 * (message of type SENDER_DATA_TYPE) 
  		 */
 		
-		if (msgsnd(msqid, &sndMsg , sizeof(struct message) - sizeof(long), 0) == -1){
+		if (msgsnd(msqid, &sndMsg, sizeof(struct message) - sizeof(long), 0) == -1){
 			perror("msgsnd");
 		}
 		
@@ -131,7 +131,7 @@ void send(const char* fileName)
  		 * that he finished saving the memory chunk.
  		 */
 		
-		if ( msgrcv(msqid, &rcvMsg, sizeof(struct message) - sizeof(long), RECV_DONE_TYPE, 0) == -1 ) {
+		if (msgrcv(msqid, &rcvMsg, sizeof(struct message) - sizeof(long), RECV_DONE_TYPE, 0) == -1) {
 			perror("msgrcv");		
 			exit(-1);
 		}
@@ -145,7 +145,7 @@ void send(const char* fileName)
 	
 	sndMsg.size = 0;
 
-	if (msgsnd(msqid, &sndMsg , sizeof(struct message) - sizeof(long) , 0) == -1) {
+	if (msgsnd(msqid, &sndMsg, sizeof(struct message) - sizeof(long) , 0) == -1) {
 		perror("msgsnd");
 	}
 	
