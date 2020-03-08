@@ -58,19 +58,19 @@ void cleanUp(const int& shmid, const int& msqid, void* sharedMemPtr)
 	// Detaching from our Shared Memory
 	if (shmdt(sharedMemPtr) == -1) {
 		perror("(shmdt) ERROR IN DETACHING SHARED MEMORY"); // If Shared memory failed to detach
-		exit(1);
+		exit(-1);
 	}
 
 	// Destroying Shared Memory
 	if (shmctl(shmid, IPC_RMID, NULL) == -1 ) {
 		perror("(shmctl) ERROR IN DESTROYING SHARED MEMORY"); //If Shared memory isn't destroyed
-		exit(1); // Exits Program
+		exit(-1); // Exits Program
 	}
 
 	// Destroing Message Queue
 	if (msgctl(msqid, IPC_RMID, NULL) == -1) {
 		perror("(msgctl) ERROR DESTROYING THE MESSAGE QUEUE"); //If Message Queue isn't destroyed
-		exit(1); // Exits program
+		exit(-1); // Exits program
 	}
 }
 
