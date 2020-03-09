@@ -1,4 +1,4 @@
-files: receiver sender
+all: receiver sender
 
 receiver: recv.cpp
 	g++ -o receiver recv.cpp
