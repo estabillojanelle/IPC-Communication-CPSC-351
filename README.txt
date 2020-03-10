@@ -30,3 +30,8 @@ EXTRA NOTES
 
 On line ,,,,, we changed size from varizble 0 to 1
 On line ,,,,, at msg.h on the function we changed %d %d to %ld %d
+
+--------------------------------------
+COLLABORATION
+
+
