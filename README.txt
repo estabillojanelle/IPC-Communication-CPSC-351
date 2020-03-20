@@ -23,7 +23,17 @@ EXTRA NOTES
 --------------------------------------
 
 On line 28 on msg.h we changed "fprintf(fp, "%d %d", mtype, size);" to "fprintf(fp, "%ld %d", mtype, size);"
-On line 
+
 
 Programming Language Used: C++
 Extra Credit: YES
+
+
+How to Execute the Program for Extra Credit
+---------------------------------------
+
+$ make all
+$ ./receiver
+
+Open new Terminal
+$ ./sender keyfilesig.txt
