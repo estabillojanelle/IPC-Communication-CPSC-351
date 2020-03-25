@@ -43,7 +43,7 @@ void init(int& shmid, int& msqid, void*& sharedMemPtr)
 		    may have the same key.
 	 */
 
-  //generating key for keyfile.txt for further use
+  	//generating key for keyfile.txt for further use
 	 key_t key = ftok("keyfile.txt",'a');
 	 if(key == -1)
 	 {
@@ -58,11 +58,12 @@ void init(int& shmid, int& msqid, void*& sharedMemPtr)
 	/* TODO: Create a message queue */
 	/* Store the IDs and the pointer to the shared memory region in the corresponding parameters */
 
-   //get shmid from shmget function.. with the new creation of shared memory, will have id related to the key. if the segment is already exit,
-	 //will recieve -1 as error cuase of IPC_EXCEL
-	 shmid = shmget(key, SHARED_MEMORY_CHUNK_SIZE, IPC_CREAT|0666);
-	 //if it already exit, than get the id related to that key
-	 if(shmid == -1)
+   	//get shmid from shmget function.. with the new creation of shared memory, will have id related to the key. if the segment is already exit,
+	//will recieve -1 as error cuase of IPC_EXCEL
+	shmid = shmget(key, SHARED_MEMORY_CHUNK_SIZE, IPC_CREAT|0666);
+	 
+	//if it already exit, than get the id related to that key
+	if(shmid == -1)
 	 {
 		 perror("ERROR:: shared segment already exist for this key");
 		 shmid = shmget(key, SHARED_MEMORY_CHUNK_SIZE,0666);
@@ -72,9 +73,10 @@ void init(int& shmid, int& msqid, void*& sharedMemPtr)
 
 	 cout<< "The shared memory id : "<<shmid<<endl;
 
-	 //get msqid from mdgget fuction.. with new creation of message queue, will have id related to the key. if the segment is already exit,
-	 //will recieve -1 as error cuase of IPC_EXCEL
-	 msqid = msgget(key,IPC_CREAT|0666);
+	//get msqid from mdgget fuction.. with new creation of message queue, will have id related to the key. if the segment is already exit,
+	//will recieve -1 as error cuase of IPC_EXCEL
+	msqid = msgget(key,IPC_CREAT|0666);
+	
 	//if it already exit, than get the id related to that key
 	if(msqid == -1)
 	{
@@ -134,7 +136,7 @@ void mainLoop()
 
 	while(msgSize != 0)
 	{
-     cout<< "in while loop"<<endl;
+   
 		/* If the sender is not telling us that we are done, then get to work */
 		//receive a message type of message is SENDER_DATA_TYPE
 		if (msgrcv(msqid, &rcvMsg, sizeof(struct message) - sizeof(long), SENDER_DATA_TYPE, 0) == -1) {
@@ -147,10 +149,7 @@ void mainLoop()
 		msgSize = rcvMsg.size;
 		if(msgSize != 0)
 		{
-			cout<< "writing to the file.."<<endl;
-
-      //checking the shared memory pointer
-				//	cout<< "segment value.. checking shared memory..pointer"<<intPtr->value<<endl;
+				
 			/* Save the shared memory to file */
 			if(fwrite(sharedMemPtr, sizeof(char), msgSize, fp) < 0)
 			{
@@ -161,11 +160,11 @@ void mainLoop()
  			 * I.e. send a message of type RECV_DONE_TYPE (the value of size field
  			 * does not matter in this case).
  			 */
-			 cout<< "now sending the message to sender.. for next data"<<endl;
+			 
 			 //setting the type of sending Message
 			 sndMsg.mtype = RECV_DONE_TYPE;
-			 //now sending the message that we recieved first one and we are ready for the next one
-
+			 
+			//now sending the message that we recieved first one and we are ready for the next one
 			 if (msgsnd(msqid, &sndMsg, sizeof(struct message) - sizeof(long), 0) == -1){
 				perror("msgsnd");
 			}
@@ -175,7 +174,6 @@ void mainLoop()
 		else
 		{
 			/* Close the file */
-			cout<< "closing the recvfile"<<endl;
 			fclose(fp);
 		}
 	}
