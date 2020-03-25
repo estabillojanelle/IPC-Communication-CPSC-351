@@ -38,8 +38,8 @@ void init(int& shmid, int& msqid, void*& sharedMemPtr)
 		    may have the same key.
 	 */
 
-        //generating key for keyfile.txt for further use
-      key_t key = ftok("keyfile.txt",'a');
+      	//generating key for keyfile.txt for further use
+      	key_t key = ftok("keyfile.txt",'a');
 			if(key == -1)
 	 	 {
 	 	    perror("EROR:: generating key");
@@ -53,7 +53,7 @@ void init(int& shmid, int& msqid, void*& sharedMemPtr)
 	/* TODO: Attach to the message queue */
 	/* Store the IDs and the pointer to the shared memory region in the corresponding parameters */
 
-//get id of segment
+	//get id of segment
 	shmid = shmget(key, SHARED_MEMORY_CHUNK_SIZE,0666);
 	if(shmid == -1)
 	{
@@ -76,13 +76,12 @@ void init(int& shmid, int& msqid, void*& sharedMemPtr)
 	cout<< "The message queue id : "<<msqid<<endl;
 
 	//attach with segment with reading and writing permission
-  sharedMemPtr = shmat(shmid,NULL,0);
+  	sharedMemPtr = shmat(shmid,NULL,0);
 	if(sharedMemPtr == (char*)-1)
 	{
 		perror("ERROR:: not attached with segment");
 		exit(1);
 	}
-	cout<< " segment attached"<<endl;
 }
 
 /**
@@ -96,7 +95,6 @@ void cleanUp(const int& shmid, const int& msqid, void* sharedMemPtr)
 {
 	/* TODO: Detach from shared memory */
 	// Detaching from our Shared Memory
-  cout<<"detaching from the shared memory"<<endl;
 	if (shmdt(sharedMemPtr) == -1) {
 		perror("shmdt"); // If Shared memory failed to detach
 		exit(-1);
@@ -109,7 +107,6 @@ void cleanUp(const int& shmid, const int& msqid, void* sharedMemPtr)
  */
 void send(const char* fileName)
 {
-	cout<< "sending..."<<endl;
 	/* Open the file for reading */
 	FILE* fp = fopen(fileName, "r");
 
@@ -132,7 +129,6 @@ void send(const char* fileName)
 	/* Read the whole file */
 	while(!feof(fp))
 	{
-    cout<<"reading the file.."<<endl;
 		/* Read at most SHARED_MEMORY_CHUNK_SIZE from the file and store them in shared memory.
  		 * fread will return how many bytes it has actually read (since the last chunk may be less
  		 * than SHARED_MEMORY_CHUNK_SIZE).
@@ -142,8 +138,8 @@ void send(const char* fileName)
 			perror("fread");
 			exit(-1);
 		}
-   cout<< "msgsize = "<< sndMsg.size<<endl;
-   cout<< "msgtype= "<<sndMsg.mtype<<endl;
+  	cout<< "msgsize = "<< sndMsg.size<<endl;
+   	cout<< "msgtype= "<<sndMsg.mtype<<endl;
 
 		/* TODO: Send a message to the receiver telling him that the data is ready
  		 * (message of type SENDER_DATA_TYPE)
@@ -151,7 +147,7 @@ void send(const char* fileName)
 		 if (msgsnd(msqid, &sndMsg, sizeof(struct message) - sizeof(long), 0) == -1){
 			perror("msgsnd");
 		}
-    cout<<"message sent..done..waiting for reciever"<<endl;
+ 
 		/* TODO: Wait until the receiver sends us a message of type RECV_DONE_TYPE telling us
  		 * that he finished saving the memory chunk.
  		 */
@@ -160,12 +156,10 @@ void send(const char* fileName)
 			exit(-1);
 		}
 
-    cout<<"still in while loop.. received message from reciever"<<endl;
-    cout<< "reciever message: size: "<<rcvMsg.size<<endl;
-    cout<< "reciever message: type: "<< rcvMsg.mtype<<endl;
+    	cout<< "reciever message: size: "<<rcvMsg.size<<endl;
+    	cout<< "reciever message: type: "<< rcvMsg.mtype<<endl;
 	}
 
-cout<< "now sending with size 0 to reciever"<< endl;
 	/** TODO: once we are out of the above loop, we have finished sending the file.
  	  * Lets tell the receiver that we have nothing more to send. We will do this by
  	  * sending a message of type SENDER_DATA_TYPE with size field set to 0.
@@ -175,8 +169,6 @@ cout<< "now sending with size 0 to reciever"<< endl;
  	if (msgsnd(msqid, &sndMsg, sizeof(struct message) - sizeof(long) , 0) == -1) {
  		perror("msgsnd");
  	}
-
-  cout<< " done.. closing the file"<<endl;
 
 	/* Close the file */
 	fclose(fp);
@@ -201,7 +193,7 @@ int main(int argc, char** argv)
 	send(argv[1]);
 
 	/* Cleanup */
-  cleanUp(shmid, msqid, sharedMemPtr);
+  	cleanUp(shmid, msqid, sharedMemPtr);
 
 	return 0;
 }
