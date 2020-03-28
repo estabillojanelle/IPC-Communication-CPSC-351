@@ -1,3 +1,19 @@
+/*AUTHORS
+--------------------------------------
+Janelle Estabillo
+estabillojanelle@csu.fullerton.edu
+CPSC 351-02
+
+Nidhi Shah
+nidhi989@csu.fullerton.edu
+CPSC 351-02 */
+//Reciever create and connect with shared memory and message queue,
+//and wait until the sender message as data is ready on shared memory
+//and read the data from shared memory and store into the text file.
+//than, send the signal to sender that data received and wait for next message
+//once it received the shared data size 0 in sender message,
+//deallocate shared memory and message queue.
+//and closed the recv file.
 #include <sys/shm.h>
 #include <sys/msg.h>
 #include <signal.h>
@@ -32,62 +48,66 @@ const char recvFileName[] = "recvfile";
 void init(int& shmid, int& msqid, void*& sharedMemPtr)
 {
 
-	/* TODO: 1. Create a file called keyfile.txt containing string "Hello world" (you may do
- 		    so manually or from the code).
-	         2. Use ftok("keyfile.txt", 'a') in order to generate the key.
-		 3. Use the key in the TODO's below. Use the same key for the queue
-		    and the shared memory segment. This also serves to illustrate the difference
-		    between the key and the id used in message queues and shared memory. The id
-		    for any System V object (i.e. message queues, shared memory, and sempahores)
-		    is unique system-wide among all System V objects. Two objects, on the other hand,
-		    may have the same key.
-	 */
+			/* TODO: 1. Create a file called keyfile.txt containing string "Hello world" (you may do
+		 		    so manually or from the code).
+			         2. Use ftok("keyfile.txt", 'a') in order to generate the key.
+				 3. Use the key in the TODO's below. Use the same key for the queue
+				    and the shared memory segment. This also serves to illustrate the difference
+				    between the key and the id used in message queues and shared memory. The id
+				    for any System V object (i.e. message queues, shared memory, and sempahores)
+				    is unique system-wide among all System V objects. Two objects, on the other hand,
+				    may have the same key.
+			 */
 
-  	//generating key for keyfile.txt for further use
-	 key_t key = ftok("keyfile.txt",'a');
-	 if(key == -1)
-	 {
-	    perror("EROR:: generating key");
-			exit(1);
-	 }
+		  	//generating key for keyfile.txt for further use
+			 key_t key = ftok("keyfile.txt",'a');
+			 //checking error
+			 if(key == -1)
+			 {
+			    perror("EROR:: generating key");
+					exit(1);
+			 }
 
- 	cout<<"The key number is: "<< key<< endl;
 
-	/* TODO: Allocate a piece of shared memory. The size of the segment must be SHARED_MEMORY_CHUNK_SIZE. */
-	/* TODO: Attach to the shared memory */
-	/* TODO: Create a message queue */
-	/* Store the IDs and the pointer to the shared memory region in the corresponding parameters */
+			/* TODO: Allocate a piece of shared memory. The size of the segment must be SHARED_MEMORY_CHUNK_SIZE. */
+			/* TODO: Attach to the shared memory */
+			/* TODO: Create a message queue */
+			/* Store the IDs and the pointer to the shared memory region in the corresponding parameters */
 
-   	//get shmid from shmget function.. with the new creation of shared memory, will have id related to the key. if the segment is already exit,
-	//will recieve -1 as error cuase of IPC_EXCEL
-	shmid = shmget(key, SHARED_MEMORY_CHUNK_SIZE, IPC_CREAT|0666);
-	 
-	//if it already exit, than get the id related to that key
-	if(shmid == -1)
-	 {
-		 perror("ERROR:: shared segment already exist for this key");
-		 shmid = shmget(key, SHARED_MEMORY_CHUNK_SIZE,0666);
-		  cout<< "The shared memory id : "<<shmid<<endl;
-		 exit(1);
-	 }
+		   	//get shmid from shmget function.. with the new creation of shared memory, will have id related to the key. if the segment is already exit,
+			//will recieve -1 as error
+			shmid = shmget(key, SHARED_MEMORY_CHUNK_SIZE, IPC_CREAT|0666);
 
-	 cout<< "The shared memory id : "<<shmid<<endl;
+			//if it already exit, than get the id related to that key
+			if(shmid == -1)
+			 {
+				 perror("ERROR:: shared segment already exist for this key");
+				 //just get shared memory id
+				 shmid = shmget(key, SHARED_MEMORY_CHUNK_SIZE,0666);
+				 exit(1);
+			 }
 
-	//get msqid from mdgget fuction.. with new creation of message queue, will have id related to the key. if the segment is already exit,
-	//will recieve -1 as error cuase of IPC_EXCEL
-	msqid = msgget(key,IPC_CREAT|0666);
-	
-	//if it already exit, than get the id related to that key
-	if(msqid == -1)
-	{
-		perror("ERROR:: message queue already exist for this key");
-		msqid = msgget(key,0666);
-		 cout<< "The message queue id : "<<msqid<<endl;
-		exit(1);
-	}
+			//get msqid from mdgget fuction.. with new creation of message queue, will have id related to the key. if the segment is already exit,
+			//will recieve -1 as error
+			msqid = msgget(key,IPC_CREAT|0666);
 
-	cout<< "The message queue id : "<<msqid<<endl;
-	sharedMemPtr = shmat(shmid,NULL,0);
+			//if it already exit, than get the id related to that key
+			if(msqid == -1)
+			{
+				perror("ERROR:: message queue already exist for this key");
+				//just get the msg id
+				msqid = msgget(key,0666);
+				exit(1);
+			}
+
+			//attach with segment with reading and writing permission
+			sharedMemPtr = shmat(shmid,NULL,0);
+				//checking error
+			if(sharedMemPtr == (char*)-1)
+			{
+				perror("ERROR:: not attached with segment");
+				exit(1);
+			}
 
 }
 
@@ -136,46 +156,50 @@ void mainLoop()
 
 	while(msgSize != 0)
 	{
-   
-		/* If the sender is not telling us that we are done, then get to work */
-		//receive a message type of message is SENDER_DATA_TYPE
-		if (msgrcv(msqid, &rcvMsg, sizeof(struct message) - sizeof(long), SENDER_DATA_TYPE, 0) == -1) {
-		 perror("msgrcv");
-		 exit(-1);
-		}
 
-		cout<< "msgsize = "<< rcvMsg.size<<endl;
-		cout<< "msgtype= "<<rcvMsg.mtype<<endl;
-		msgSize = rcvMsg.size;
-		if(msgSize != 0)
-		{
-				
-			/* Save the shared memory to file */
-			if(fwrite(sharedMemPtr, sizeof(char), msgSize, fp) < 0)
+			/* If the sender is not telling us that we are done, then get to work */
+			//receive a message type of message is SENDER_DATA_TYPE
+			if (msgrcv(msqid, &rcvMsg, sizeof(struct message) - sizeof(long), SENDER_DATA_TYPE, 0) == -1)
 			{
-				perror("fwrite");
-			}
+					//error checking
+				 perror("msgrcv");
+				 exit(-1);
+		  }
 
-			/* TODO: Tell the sender that we are ready for the next file chunk.
- 			 * I.e. send a message of type RECV_DONE_TYPE (the value of size field
- 			 * does not matter in this case).
- 			 */
-			 
-			 //setting the type of sending Message
-			 sndMsg.mtype = RECV_DONE_TYPE;
-			 
-			//now sending the message that we recieved first one and we are ready for the next one
-			 if (msgsnd(msqid, &sndMsg, sizeof(struct message) - sizeof(long), 0) == -1){
-				perror("msgsnd");
+			//getting the message size
+			msgSize = rcvMsg.size;
+			if(msgSize != 0)
+			{
+
+					/* Save the shared memory to file */
+					if(fwrite(sharedMemPtr, sizeof(char), msgSize, fp) < 0)
+					{
+						//checking error
+						perror("fwrite");
+					}
+
+					/* TODO: Tell the sender that we are ready for the next file chunk.
+		 			 * I.e. send a message of type RECV_DONE_TYPE (the value of size field
+		 			 * does not matter in this case).
+		 			 */
+
+					 //setting the type of sending Message
+					 sndMsg.mtype = RECV_DONE_TYPE;
+
+					//now sending the message that we recieved first one and we are ready for the next one
+					 if (msgsnd(msqid, &sndMsg, sizeof(struct message) - sizeof(long), 0) == -1)
+					 {
+						 //checking error
+							perror("msgsnd");
+				   }
+
 			}
-			cout<< "message sent to sender"<<endl;
-		}
-		/* We are done */
-		else
-		{
-			/* Close the file */
-			fclose(fp);
-		}
+			/* We are done */
+			else
+			{
+				/* Close the file */
+				fclose(fp);
+			}
 	}
 }
 
@@ -215,27 +239,26 @@ void cleanUp(const int& shmid, const int& msqid, void* sharedMemPtr)
 void ctrlCSignal(int signal)
 {
 	/* Free system V resources */
-	cout<< "deallocating segment and message queue .."<<endl;
 	cleanUp(shmid, msqid, sharedMemPtr);
 }
 
 int main(int argc, char** argv)
 {
 
-	/* TODO: Install a singnal handler (see signaldemo.cpp sample file).
- 	 * In a case user presses Ctrl-c your program should delete message
- 	 * queues and shared memory before exiting. You may add the cleaning functionality
- 	 * in ctrlCSignal().
- 	 */
-  signal(SIGINT, ctrlCSignal);
-	/* Initialize */
-	init(shmid, msqid, sharedMemPtr);
+		/* TODO: Install a singnal handler (see signaldemo.cpp sample file).
+	 	 * In a case user presses Ctrl-c your program should delete message
+	 	 * queues and shared memory before exiting. You may add the cleaning functionality
+	 	 * in ctrlCSignal().
+	 	 */
+	  signal(SIGINT, ctrlCSignal);
+		/* Initialize */
+		init(shmid, msqid, sharedMemPtr);
 
-	/* Go to the main loop */
-	mainLoop();
+		/* Go to the main loop */
+		mainLoop();
 
-	/** TODO: Detach from shared memory segment, and deallocate shared memory and message queue (i.e. call cleanup) **/
-	ctrlCSignal(0);
+		/** TODO: Detach from shared memory segment, and deallocate shared memory and message queue (i.e. call cleanup) **/
+		ctrlCSignal(0);
 
-	return 0;
+		return 0;
 }
